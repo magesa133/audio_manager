@@ -1,10 +1,9 @@
 import time
 import os
 from pycaw.pycaw import AudioUtilities, IMMNotificationClient
-from ctypes import POINTER, cast
+from ctypes import POINTER
 from comtypes import CLSCTX_ALL
-from pycaw.interfaces import IAudioEndpointVolume
-from playsound import playsound
+import pygame
 import threading
 
 class AudioDeviceManager(IMMNotificationClient):
@@ -28,28 +27,20 @@ class AudioDeviceManager(IMMNotificationClient):
 
         self.device_count = new_device_count
 
-    def OnDeviceAdded(self, pwstrDeviceId):
-        pass
-
-    def OnDeviceRemoved(self, pwstrDeviceId):
-        pass
-
-    def OnDeviceStateChanged(self, pwstrDeviceId, dwNewState):
-        pass
-
-    def OnPropertyValueChanged(self, pwstrDeviceId, key):
-        pass
-
     def play_audio(self, file_path):
         """Plays the given audio file."""
         print(f"Playing: {file_path}")
-        playsound(file_path)
+        pygame.mixer.init()
+        pygame.mixer.music.load(file_path)
+        pygame.mixer.music.play()
+        while pygame.mixer.music.get_busy():
+            pygame.time.Clock().tick(10)
 
     def monitor_devices(self):
         """Continuously monitors device changes."""
         print("Monitoring audio devices...")
         while self.running:
-            time.sleep(1)  # Keep the loop running
+            time.sleep(1)
 
     def stop_monitoring(self):
         """Stops the monitoring loop."""
@@ -58,18 +49,15 @@ class AudioDeviceManager(IMMNotificationClient):
 
 def main():
     # Paths to audio files
-    internal_audio = "internal_audio.mp3"  # Path to internal audio file
-    external_audio = "external_audio.mp3"  # Path to external audio file
+    internal_audio = "internal_audio.mp3"
+    external_audio = "external_audio.mp3"
 
-    # Ensure audio files exist
     if not os.path.exists(internal_audio) or not os.path.exists(external_audio):
-        print("Error: Audio files not found. Ensure 'internal_audio.mp3' and 'external_audio.mp3' are in the same directory.")
+        print("Error: Audio files not found.")
         return
 
-    # Initialize the audio manager
     audio_manager = AudioDeviceManager(internal_audio, external_audio)
 
-    # Start monitoring devices
     try:
         audio_manager.monitor_devices()
     except KeyboardInterrupt:
